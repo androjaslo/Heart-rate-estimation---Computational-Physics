@@ -1,7 +1,8 @@
 # Heart Rate Estimation from Inertial Measurements (SCG / BCG)
 
 **Laboratory of Computational Physics — Final Project**
-Università degli Studi di Padova · Laboratory of Physical Datasets – Mod. B (2026)
+
+Università degli Studi di Padova (2026)
 
 <p align="center">
   <img src="example.png" width="55%" alt="Schematic of a supine subject instrumented with wearable inertial sensors">
