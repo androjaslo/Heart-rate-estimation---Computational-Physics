@@ -63,18 +63,7 @@ The entire analysis is contained in a single Jupyter notebook, organised as foll
 
 ## Data
 
-### Acquisition
 
-All recordings were acquired with the MuSe (Multi-Sensor) platform, a miniaturised, low-power wireless IMU produced by [221e](https://www.221e.com). Two healthy volunteers took part after giving informed consent: the centre-of-sternum recording belongs to subject 1, while all other recordings belong to subject 2.
-
-| File | Sensor placement | Subject | Device | Nominal rate | Samples |
-|---|---|---|---|---|---|
-| `center_sternum.txt` | Centre of the sternum; subject supine, then on left and right side | 1 | MuSe_2128 | 200 Hz | 16 506 |
-| `1_Stave_supine_static.txt` | Bed stave under the mattress, at chest level; subject supine | 2 | MuSe_2168 | 100 Hz | 9 170 |
-| `2_Mattress_supine.txt` | On the mattress near a corner, not under the pillow | 2 | MuSe_2168 | 100 Hz | 11 746 |
-| `3_Subject_sitting_chair.txt` | On a desk; seated subject resting forearms and hands on it | 2 | MuSe_2168 | 100 Hz | 6 986 |
-| `4_Chest_sweater.txt` | On the chest, directly over a sweater | 2 | MuSe_2168 | 100 Hz | 14 938 |
-| `5_Under_chair.txt` | Under the seat of a chair; subject seated | 2 | MuSe_2168 | 100 Hz | 9 912 |
 
 ### File format
 
@@ -94,46 +83,11 @@ Each recording is a tab-separated text file with a header row and 16 columns:
 
 `Calibration data 1.txt` and `Calibration data 2.txt` report the device configuration (full-scale ranges and sampling rate) together with:
 
-- a **gyroscope bias** vector **b**;
-- an **accelerometer** 3 × 3 correction matrix **C** and offset vector **o**;
-- a magnetometer correction matrix and offset (not used in this work).
-
----
-
-## Methodology
-
-The same pipeline is applied to both analysed recordings.
-
-1. **Calibration.** Raw readings are corrected as
-   **a**<sub>cal</sub> = (**a**<sub>raw</sub> − **o**) **C**<sup>T</sup> for the accelerometer and **g**<sub>cal</sub> = **g**<sub>raw</sub> − **b** for the gyroscope, using the parameters of the corresponding device.
-2. **Variable selection.** Only accelerometer and gyroscope channels are retained. Magnetometer data are discarded because of their sensitivity to environmental magnetic perturbations, and quaternions are not required for HR estimation.
-3. **Time reconstruction.** Timestamps are verified to be Unix times. Since the clock has a 1 s resolution, a uniform time axis is rebuilt from the mean number of samples per second (≈ 217 Hz effective for the sternum recording, ≈ 99 Hz for the others).
-4. **Magnitude signals.** Following Haescher et al. (2015), the axis-independent magnitudes
-   |a| = √(a<sub>x</sub>² + a<sub>y</sub>² + a<sub>z</sub>²) and |g| = √(g<sub>x</sub>² + g<sub>y</sub>² + g<sub>z</sub>²)
-   are computed and mean-centred, which removes the gravitational component and the residual gyroscope bias.
-5. **Trimming.** Transients caused by attaching and removing the sensor are excluded after visual inspection of zoomed views of the beginning and end of each recording.
-6. **Statistical description.** Mean, standard deviation, median, minimum, maximum, skewness and kurtosis are computed for each axis.
-7. **Principal component analysis.** The eigenvalues of the covariance matrix of the three accelerometer and the three gyroscope axes quantify how the variance is distributed among the axes.
-8. **Selection of the secondary dataset.** The five alternative recordings are compared through the time evolution of |a| and |g|, their standard deviations and coefficients of variation. The recording with the lowest acceleration variability that still preserves a meaningful gyroscope signal is retained.
-9. **Spectral analysis.** The FFT of the acceleration signal, of the gyroscope signal and of the product of their amplitude spectra is computed. The dominant peak within 0.5–3 Hz (30–180 bpm) is taken as the cardiac frequency, and HR = 60 · f<sub>peak</sub>.
-10. **Band-pass filtering.** A second-order Butterworth band-pass filter (0.6–3 Hz), applied with zero-phase forward–backward filtering (`scipy.signal.filtfilt`), suppresses respiratory and high-frequency components; the FFT is recomputed on the filtered signal.
-11. **Beat-to-beat analysis.** Peaks of the filtered signal are detected with `scipy.signal.find_peaks` (minimum separation 0.5 s, prominence ≥ 0.3 σ). Inter-peak intervals give the instantaneous HR (60/Δt), whose distribution is shown together with a histogram of the intervals as a qualitative indicator of heart rate variability (HRV).
-
 ---
 
 ## Results
 
 ### Centre-of-sternum recording (subject 1)
-
-**PCA — explained variance**
-
-| Component | Accelerometer | Gyroscope |
-|---|---|---|
-| PC1 | 74.7 % | 80.3 % |
-| PC2 | 14.7 % | 15.3 % |
-| PC3 | 10.6 % | 4.5 % |
-
-All three axes of both sensors contribute non-negligible variance and were retained.
 
 **Heart-rate estimates**
 
@@ -158,16 +112,6 @@ The three spectral estimators agree, and band-pass filtering yields a sharper pe
 | 5 – Under chair | 9.8 | 0.18 | Spurious peaks; strongly posture-dependent |
 
 ### Secondary recording (subject 2)
-
-**PCA — explained variance**
-
-| Component | Accelerometer | Gyroscope |
-|---|---|---|
-| PC1 | 74.2 % | 86.1 % |
-| PC2 | 19.6 % | 8.0 % |
-| PC3 | 6.2 % | 5.8 % |
-
-Since the acceleration axes were weakly correlated, the spectral analysis used the X-axis acceleration, which showed correlation with the gyroscope signal.
 
 **Heart-rate estimates**
 
